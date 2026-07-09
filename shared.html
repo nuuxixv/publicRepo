@@ -14,12 +14,12 @@
 </head>
 <body class="font-sans antialiased text-zinc-900 dark:text-zinc-50" style="font-family:Inter,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
 <div class="min-h-screen w-full flex items-center justify-center p-5">
-  <div class="w-full max-w-xl flex flex-col gap-4">
+  <div class="w-full max-w-none flex flex-col gap-4">
 
     <!-- 다음 이벤트 하이라이트 -->
     <div class="rise rounded-2xl border border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 shadow-sm p-6" style="animation-delay:.02s">
-      <div class="text-sm font-medium opacity-70">다음 기념일</div>
-      <div class="mt-2 flex items-end justify-between">
+      <div class="text-sm font-medium opacity-70">다음 이벤트</div>
+      <div class="mt-2 flex flex-wrap items-end justify-between gap-2">
         <span id="hlLabel" class="text-lg font-semibold">–</span>
         <span id="hlD" class="text-4xl font-bold tracking-tighter tabular-nums">D-–</span>
       </div>
@@ -39,7 +39,7 @@
     </div>
 
     <!-- 다음 100일 / 주년 / 1000일 -->
-    <div class="rise grid grid-cols-3 gap-3" style="animation-delay:.14s">
+    <div class="rise grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-3" style="animation-delay:.14s">
       <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-4 text-center">
         <div id="h100L" class="text-xs font-medium text-zinc-500 dark:text-zinc-400">다음 100일</div>
         <div id="h100" class="mt-2 text-2xl font-bold tabular-nums">D-–</div>
@@ -55,7 +55,7 @@
     </div>
 
     <!-- 서로의 생일 -->
-    <div class="rise grid grid-cols-2 gap-3" style="animation-delay:.20s">
+    <div class="rise grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-3" style="animation-delay:.20s">
       <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-4 text-center">
         <div id="aL" class="text-xs font-medium text-zinc-500 dark:text-zinc-400">생일</div>
         <div id="aD" class="mt-2 text-2xl font-bold tabular-nums">D-–</div>
@@ -73,11 +73,26 @@
 </div>
 
 <script>
-// ══════════ 여기만 채우세요 ══════════
+// ═══ 값은 임베드 주소 뒤 해시로 넘깁니다 ═══
+//   예: shared.html#anni=yyyy-mm-dd&a=a:yyyy-mm-dd&b=b:yyyy-mm-dd
+//   a / b 형식은  이름:생년월일  (이름 생략 시 기본값)
+//   (아래는 해시가 없을 때 쓰는 기본값)
+function readParams(){
+  const o={}; location.hash.slice(1).split('&').forEach(kv=>{
+    const i=kv.indexOf('='); if(i>0) o[decodeURIComponent(kv.slice(0,i))]=decodeURIComponent(kv.slice(i+1));
+  }); return o;
+}
+function readPerson(s, dName, dBday){
+  if(!s) return {name:dName, birthday:dBday};
+  const i=s.indexOf(':');
+  return i<0 ? {name:dName, birthday:s}
+             : {name:s.slice(0,i)||dName, birthday:s.slice(i+1)};
+}
+const P = readParams();
 const CONFIG = {
-  anniversary: "2022-09-23",              // 사귄 날 / 기념일 YYYY-MM-DD
-  personA: { name:"건",  birthday:"1996-11-15" },
-  personB: { name:"정",  birthday:"2001-09-18" }
+  anniversary: P.anni || "2000-01-01",
+  personA: readPerson(P.a, "A", "2000-01-01"),
+  personB: readPerson(P.b, "B", "2000-01-01")
 };
 // ═══════════════════════════════════
 
@@ -151,6 +166,7 @@ function render(animate){
 }
 render(true);
 setInterval(()=>render(false),60000);
+window.addEventListener('hashchange',()=>location.reload());
 </script>
 </body>
 </html>
