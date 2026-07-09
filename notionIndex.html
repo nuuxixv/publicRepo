@@ -17,9 +17,9 @@
 </head>
 <body class="font-sans antialiased text-zinc-900 dark:text-zinc-50">
   <div class="min-h-screen w-full flex items-center justify-center p-5">
-    <div class="w-full max-w-xl flex flex-col gap-4">
+    <div class="w-full max-w-none flex flex-col gap-4">
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
         <!-- 남은 일수 -->
         <div class="rise rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-6"
              style="animation-delay:.02s">
@@ -68,7 +68,10 @@
 <script>
 // ── 연도별 공휴일. 매년 초 여기 한 줄만 추가 ──
 const HOLIDAYS = {
-  2026: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-03-02","2026-05-01","2026-05-05","2026-05-24","2026-05-25","2026-06-03","2026-06-06","2026-07-17","2026-08-15","2026-08-17","2026-09-24","2026-09-25","2026-09-26","2026-10-03","2026-10-05","2026-10-09","2026-12-25"]
+  2026: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-03-01","2026-03-02",
+         "2026-05-01","2026-05-05","2026-05-24","2026-05-25","2026-06-03","2026-06-06",
+         "2026-07-17","2026-08-15","2026-08-17","2026-09-24","2026-09-25","2026-09-26",
+         "2026-10-03","2026-10-05","2026-10-09","2026-12-25"]
 };
 
 function seoulToday(){
