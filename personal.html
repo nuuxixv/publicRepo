@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나의 하루</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'media'};</script>
+<style>
+  body{background:transparent;}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .rise{animation:rise .5s cubic-bezier(.22,1,.36,1) both;}
+  .cell{aspect-ratio:1;border-radius:1px;}
+</style>
+</head>
+<body class="font-sans antialiased text-zinc-900 dark:text-zinc-50" style="font-family:Inter,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+<div class="min-h-screen w-full flex items-center justify-center p-5">
+  <div class="w-full max-w-xl flex flex-col gap-4">
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="rise rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-6" style="animation-delay:.02s">
+        <div class="text-sm font-medium text-zinc-500 dark:text-zinc-400">올해 남은 일수</div>
+        <div class="mt-3 flex items-baseline gap-1.5">
+          <span id="days" class="text-5xl font-semibold tracking-tighter tabular-nums">–</span>
+          <span class="text-lg font-medium text-zinc-500 dark:text-zinc-400">일</span>
+        </div>
+        <div class="mt-2 text-xs text-zinc-400 dark:text-zinc-500">오늘 포함</div>
+      </div>
+      <div class="rise rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-6" style="animation-delay:.08s">
+        <div class="text-sm font-medium text-zinc-500 dark:text-zinc-400">살아온 날</div>
+        <div class="mt-3 flex items-baseline gap-1.5">
+          <span id="alive" class="text-5xl font-semibold tracking-tighter tabular-nums">–</span>
+          <span class="text-lg font-medium text-zinc-500 dark:text-zinc-400">일</span>
+        </div>
+        <div id="age" class="mt-2 text-xs text-zinc-400 dark:text-zinc-500"></div>
+      </div>
+    </div>
+
+    <!-- 인생 진행률 -->
+    <div class="rise rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-5" style="animation-delay:.14s">
+      <div class="flex items-center justify-between text-sm font-medium">
+        <span id="lifeLabel" class="text-zinc-500 dark:text-zinc-400">인생 진행률</span>
+        <span id="lifePct" class="tabular-nums">–%</span>
+      </div>
+      <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+        <div id="lifeBar" class="h-full rounded-full bg-zinc-900 dark:bg-zinc-50 transition-all duration-700" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- 이번 달 / 이번 주 -->
+    <div class="rise grid grid-cols-2 gap-4" style="animation-delay:.20s">
+      <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-5">
+        <div class="flex items-center justify-between text-sm font-medium">
+          <span class="text-zinc-500 dark:text-zinc-400">이번 달</span><span id="monPct" class="tabular-nums">–%</span>
+        </div>
+        <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <div id="monBar" class="h-full rounded-full bg-sky-500 transition-all duration-700" style="width:0%"></div>
+        </div>
+      </div>
+      <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-5">
+        <div class="flex items-center justify-between text-sm font-medium">
+          <span class="text-zinc-500 dark:text-zinc-400">이번 주</span><span id="weekPct" class="tabular-nums">–%</span>
+        </div>
+        <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+          <div id="weekBar" class="h-full rounded-full bg-violet-500 transition-all duration-700" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 인생 주차 그리드 -->
+    <div class="rise rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-6" style="animation-delay:.26s">
+      <div class="flex items-center justify-between text-sm font-medium">
+        <span class="text-zinc-500 dark:text-zinc-400">인생 주차 · 한 칸 = 1주</span>
+        <span id="weeksSub" class="tabular-nums text-zinc-400 dark:text-zinc-500"></span>
+      </div>
+      <div id="grid" class="mt-3 grid gap-[2px]" style="grid-template-columns:repeat(52,minmax(0,1fr))"></div>
+    </div>
+
+    <div id="today" class="text-center text-[11px] text-zinc-400 dark:text-zinc-600"></div>
+  </div>
+</div>
+
+<script>
+// ══════════ 여기만 채우세요 ══════════
+const CONFIG = {
+  birthday: "1990-01-01",   // 내 생일 YYYY-MM-DD
+  lifespan: 80              // 기준 수명(년)
+};
+// ═══════════════════════════════════
+
+const MS=86400000;
+const diff=(a,b)=>Math.round((b-a)/MS);
+function seoulToday(){
+  const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const g=t=>+p.find(x=>x.type===t).value; return {y:g('year'),m:g('month'),d:g('day')};
+}
+function countUp(el,target){const dur=700,t0=performance.now();(function s(t){const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=Math.round(target*e).toLocaleString();if(k<1)requestAnimationFrame(s);})(performance.now());}
+
+function render(animate){
+  const T=seoulToday();
+  const tU=Date.UTC(T.y,T.m-1,T.d);
+  const [by,bm,bd]=CONFIG.birthday.split('-').map(Number);
+  const bU=Date.UTC(by,bm-1,bd);
+
+  // 올해 남은 일수
+  const yearEnd=Date.UTC(T.y,11,31);
+  const remaining=diff(tU,yearEnd)+1;
+  if(animate) countUp(document.getElementById('days'),remaining); else document.getElementById('days').textContent=remaining.toLocaleString();
+
+  // 살아온 날 + 만 나이
+  const alive=diff(bU,tU);
+  if(animate) countUp(document.getElementById('alive'),alive); else document.getElementById('alive').textContent=alive.toLocaleString();
+  const age=T.y-by-((T.m<bm||(T.m===bm&&T.d<bd))?1:0);
+  document.getElementById('age').textContent="만 "+age+"세";
+
+  // 인생 진행률
+  const lifeEnd=Date.UTC(by+CONFIG.lifespan,bm-1,bd);
+  const lifePct=Math.min(100,Math.max(0,diff(bU,tU)/diff(bU,lifeEnd)*100));
+  document.getElementById('lifeLabel').textContent="인생 진행률 · "+CONFIG.lifespan+"년 기준";
+  document.getElementById('lifePct').textContent=lifePct.toFixed(1)+"%";
+  document.getElementById('lifeBar').style.width=lifePct+"%";
+
+  // 이번 달 / 이번 주
+  const daysInMonth=new Date(Date.UTC(T.y,T.m,0)).getUTCDate();
+  const monPct=T.d/daysInMonth*100;
+  document.getElementById('monPct').textContent=Math.round(monPct)+"%";
+  document.getElementById('monBar').style.width=monPct+"%";
+  const dowMon=((new Date(tU).getUTCDay()+6)%7)+1; // 월=1..일=7
+  const weekPct=dowMon/7*100;
+  document.getElementById('weekPct').textContent=Math.round(weekPct)+"%";
+  document.getElementById('weekBar').style.width=weekPct+"%";
+
+  // 인생 주차 그리드
+  const totalWeeks=CONFIG.lifespan*52;
+  const lived=Math.floor(alive/7);
+  document.getElementById('weeksSub').textContent=lived.toLocaleString()+" / "+totalWeeks.toLocaleString()+"주";
+  const g=document.getElementById('grid');
+  if(g.childElementCount!==totalWeeks){
+    g.innerHTML="";
+    for(let i=0;i<totalWeeks;i++){const c=document.createElement('div');c.className="cell";g.appendChild(c);}
+  }
+  [...g.children].forEach((c,i)=>{
+    c.className="cell "+(i<lived?"bg-zinc-800 dark:bg-zinc-200":"bg-zinc-200 dark:bg-zinc-800");
+  });
+
+  const iso=`${T.y}-${String(T.m).padStart(2,'0')}-${String(T.d).padStart(2,'0')}`;
+  document.getElementById('today').textContent="오늘 · "+iso+" (Asia/Seoul)";
+}
+render(true);
+setInterval(()=>render(false),60000);
+</script>
+</body>
+</html>

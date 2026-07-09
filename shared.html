@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 기념일</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={darkMode:'media'};</script>
+<style>
+  body{background:transparent;}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .rise{animation:rise .5s cubic-bezier(.22,1,.36,1) both;}
+</style>
+</head>
+<body class="font-sans antialiased text-zinc-900 dark:text-zinc-50" style="font-family:Inter,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+<div class="min-h-screen w-full flex items-center justify-center p-5">
+  <div class="w-full max-w-xl flex flex-col gap-4">
+
+    <!-- 다음 이벤트 하이라이트 -->
+    <div class="rise rounded-2xl border border-zinc-900 dark:border-zinc-100 bg-zinc-900 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-900 shadow-sm p-6" style="animation-delay:.02s">
+      <div class="text-sm font-medium opacity-70">다음 이벤트</div>
+      <div class="mt-2 flex items-end justify-between">
+        <span id="hlLabel" class="text-lg font-semibold">–</span>
+        <span id="hlD" class="text-4xl font-bold tracking-tighter tabular-nums">D-–</span>
+      </div>
+      <div id="hlDate" class="mt-1 text-xs opacity-60"></div>
+    </div>
+
+    <!-- 기념일 D+ -->
+    <div class="rise rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-6" style="animation-delay:.08s">
+      <div class="flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-rose-500"></span>함께한 날
+      </div>
+      <div class="mt-3 flex items-baseline gap-1.5">
+        <span id="together" class="text-6xl font-semibold tracking-tighter tabular-nums">–</span>
+        <span class="text-xl font-medium text-zinc-500 dark:text-zinc-400">일째</span>
+      </div>
+      <div id="ymd" class="mt-2 text-sm text-zinc-400 dark:text-zinc-500"></div>
+    </div>
+
+    <!-- 다음 100일 / 주년 / 1000일 -->
+    <div class="rise grid grid-cols-3 gap-3" style="animation-delay:.14s">
+      <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-4 text-center">
+        <div id="h100L" class="text-xs font-medium text-zinc-500 dark:text-zinc-400">다음 100일</div>
+        <div id="h100" class="mt-2 text-2xl font-bold tabular-nums">D-–</div>
+      </div>
+      <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-4 text-center">
+        <div id="hyL" class="text-xs font-medium text-zinc-500 dark:text-zinc-400">다음 주년</div>
+        <div id="hy" class="mt-2 text-2xl font-bold tabular-nums">D-–</div>
+      </div>
+      <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-4 text-center">
+        <div id="h1kL" class="text-xs font-medium text-zinc-500 dark:text-zinc-400">다음 1000일</div>
+        <div id="h1k" class="mt-2 text-2xl font-bold tabular-nums">D-–</div>
+      </div>
+    </div>
+
+    <!-- 서로의 생일 -->
+    <div class="rise grid grid-cols-2 gap-3" style="animation-delay:.20s">
+      <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-4 text-center">
+        <div id="aL" class="text-xs font-medium text-zinc-500 dark:text-zinc-400">생일</div>
+        <div id="aD" class="mt-2 text-2xl font-bold tabular-nums">D-–</div>
+        <div id="aSub" class="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500"></div>
+      </div>
+      <div class="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm p-4 text-center">
+        <div id="bL" class="text-xs font-medium text-zinc-500 dark:text-zinc-400">생일</div>
+        <div id="bD" class="mt-2 text-2xl font-bold tabular-nums">D-–</div>
+        <div id="bSub" class="mt-1 text-[11px] text-zinc-400 dark:text-zinc-500"></div>
+      </div>
+    </div>
+
+    <div id="today" class="text-center text-[11px] text-zinc-400 dark:text-zinc-600"></div>
+  </div>
+</div>
+
+<script>
+// ══════════ 여기만 채우세요 ══════════
+const CONFIG = {
+  anniversary: "2021-03-14",              // 사귄 날 / 기념일 YYYY-MM-DD
+  personA: { name:"나",  birthday:"1993-05-20" },
+  personB: { name:"너",  birthday:"1995-08-02" }
+};
+// ═══════════════════════════════════
+
+const MS=86400000;
+const diff=(a,b)=>Math.round((b-a)/MS);
+const dLabel=d=>d===0?"D-DAY":"D-"+d;
+function seoulToday(){
+  const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const g=t=>+p.find(x=>x.type===t).value; return {y:g('year'),m:g('month'),d:g('day')};
+}
+function ymd(f,t){ // {y,m,d} from→to
+  let y=t.y-f.y,m=t.m-f.m,d=t.d-f.d;
+  if(d<0){m--;d+=new Date(Date.UTC(t.y,t.m-1,0)).getUTCDate();}
+  if(m<0){y--;m+=12;} return {y,m,d};
+}
+function countUp(el,target){const dur=700,t0=performance.now();(function s(t){const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=Math.round(target*e).toLocaleString();if(k<1)requestAnimationFrame(s);})(performance.now());}
+function fmt(u){return `${u.getUTCFullYear()}.${String(u.getUTCMonth()+1).padStart(2,'0')}.${String(u.getUTCDate()).padStart(2,'0')}`;}
+
+function nextBirthday(T,tU,bm,bd){let y=T.y,u=Date.UTC(y,bm-1,bd);if(u<tU)u=Date.UTC(++y,bm-1,bd);return {u,dminus:diff(tU,u),year:y};}
+
+function render(animate){
+  const T=seoulToday(), tU=Date.UTC(T.y,T.m-1,T.d);
+  const [ay0,am,ad]=CONFIG.anniversary.split('-').map(Number);
+  const aU=Date.UTC(ay0,am-1,ad);
+
+  const count=diff(aU,tU)+1; // 오늘이 며칠째
+  if(animate) countUp(document.getElementById('together'),count); else document.getElementById('together').textContent=count.toLocaleString();
+  const y=ymd({y:ay0,m:am,d:ad},T);
+  document.getElementById('ymd').textContent=`${y.y}년 ${y.m}개월 ${y.d}일`;
+
+  // 다음 100일 / 1000일
+  const next100=Math.ceil(count/100)*100, d100=next100-count;
+  document.getElementById('h100L').textContent=next100.toLocaleString()+"일";
+  document.getElementById('h100').textContent=dLabel(d100);
+  const next1k=Math.ceil(count/1000)*1000, d1k=next1k-count;
+  document.getElementById('h1kL').textContent=next1k.toLocaleString()+"일";
+  document.getElementById('h1k').textContent=dLabel(d1k);
+
+  // 다음 주년
+  let yy=T.y,annU=Date.UTC(yy,am-1,ad); if(annU<tU)annU=Date.UTC(++yy,am-1,ad);
+  const dy=diff(tU,annU), yrs=yy-ay0;
+  document.getElementById('hyL').textContent=yrs+"주년";
+  document.getElementById('hy').textContent=dLabel(dy);
+
+  // 생일
+  const [aby,abm,abd]=CONFIG.personA.birthday.split('-').map(Number);
+  const [bby,bbm,bbd]=CONFIG.personB.birthday.split('-').map(Number);
+  const A=nextBirthday(T,tU,abm,abd), B=nextBirthday(T,tU,bbm,bbd);
+  document.getElementById('aL').textContent=CONFIG.personA.name+" 생일";
+  document.getElementById('aD').textContent=dLabel(A.dminus);
+  document.getElementById('aSub').textContent="만 "+(A.year-aby)+"세";
+  document.getElementById('bL').textContent=CONFIG.personB.name+" 생일";
+  document.getElementById('bD').textContent=dLabel(B.dminus);
+  document.getElementById('bSub').textContent="만 "+(B.year-bby)+"세";
+
+  // 하이라이트: 가장 가까운 이벤트
+  const events=[
+    {label:next100.toLocaleString()+"일", d:d100, date:new Date(tU+d100*MS)},
+    {label:yrs+"주년", d:dy, date:new Date(annU)},
+    {label:next1k.toLocaleString()+"일", d:d1k, date:new Date(tU+d1k*MS)},
+    {label:CONFIG.personA.name+" 생일", d:A.dminus, date:new Date(A.u)},
+    {label:CONFIG.personB.name+" 생일", d:B.dminus, date:new Date(B.u)}
+  ].sort((p,q)=>p.d-q.d);
+  const hl=events[0];
+  document.getElementById('hlLabel').textContent=hl.label;
+  document.getElementById('hlD').textContent=dLabel(hl.d);
+  document.getElementById('hlDate').textContent=fmt(hl.date);
+
+  const iso=`${T.y}-${String(T.m).padStart(2,'0')}-${String(T.d).padStart(2,'0')}`;
+  document.getElementById('today').textContent="오늘 · "+iso+" (Asia/Seoul)";
+}
+render(true);
+setInterval(()=>render(false),60000);
+</script>
+</body>
+</html>
